@@ -162,37 +162,8 @@ class Humanoid extends CharacterStats{
   // * Give the Hero and Villains different methods that could be used to remove health points from objects which could result in destruction if health gets to 0 or drops below 0;
   // * Create two new objects, one a villain and one a hero and fight it out with methods!
 
-class Game{
-  constructor(){
-    this.Heros=[]
-    this.Villans=[]
-  }
-  addHeroes(heros){
-    this.Heros.concat(heros)
-    console.log('Heroes added\n', ...this.Heros.name)
-  }
-  addHero(hero){
-    this.Heros.push(hero)
-    console.log('hero added::', hero.name)
-  }
-  addVillans(villans){
-    this.Villan.concat(villans)
-    console.log('Villans added\n', ...this.Villans.name)
-  }
-  addVillan(villan){
-    this.Villans.push(villan)
-    console.log('hero added::', villan.name)
-  }
-  
-  kill()
-}
-
-CharacterStats.prototype.Damage=function(damage){
-  this.healthPoints-=damage
-  console.log(`${this.name} took ${damage} hp of damage and now has ${this.healthPoints}`)
-  if(this.healthPoints<=0){
-    this.destroy()
-  }
+CharacterStats.prototype.isAlive=function(){
+  return this.healthPoints>0
 }
 
 GameObject.prototype.SetRandom=function(min,max){
@@ -205,7 +176,84 @@ GameObject.prototype.RandomDamage=function(weapon,target){
     this.min=0
   if(!this.max)
     this.max=max=4
-  
-  let temp=(Math.random()*this.max)+this.min
 
+  let temp=Math.floor((Math.random()*(this.max-this.min+1) )+this.min)
+  if(temp>0){
+    console.log(`${this.name} attacked ${target.name} for ${temp} damage using ${weapon}`)
+    target.Damage(temp)
+  }else{
+    console.log(`${this.name} Missed ${target.name} with ${weapon}`);
+  }
 }
+
+GameObject.prototype.Attack=function(weapon,target){
+  if(Array.isArray(weapon)){
+    weapon=weapon[Math.floor(Math.random() * (weapon.length))]
+  }
+
+  this.RandomDamage(weapon,target)
+}
+
+CharacterStats.prototype.Damage=function(damage){
+  this.healthPoints-=damage
+  console.log(`${this.name} took ${damage} hp of damage and now has ${this.healthPoints}`)
+  if(this.healthPoints<=0){
+    this.destroy()
+  }
+}
+
+class Game{
+  constructor(hero, villian){
+    this.hero=hero
+    this.villian=villian
+  }
+  runGame(){
+    while(this.villian.isAlive() && this.hero.isAlive()){
+      
+      this.hero.Attack(this.hero.weapons, this.villian)
+      if(!this.villian.isAlive())
+        return "The Hero surived!"
+      
+      this.villian.Attack(this.villian.weapons, this.hero)
+      if(!this.hero.isAlive())
+        return "The Villian Prevailed!"
+    }
+  }
+}
+
+const Hero=new Humanoid({
+  createdAt: new Date(),
+  dimensions: {
+    length: 2,
+    width: 2,
+    height: 2,
+  },
+  healthPoints: 15,
+  name: 'Sir Mustachio',
+  team: 'The Round Table',
+  weapons: [
+    'Giant Sword',
+    'Shield',
+  ],
+  language: 'Common Tongue'
+})
+const Villian=new Humanoid({
+  createdAt: new Date(),
+    dimensions: {
+      length: 1,
+      width: 2,
+      height: 4,
+    },
+    healthPoints: 10,
+    name: 'Lilith',
+    team: 'Forest Kingdom',
+    weapons: [
+      'Bow',
+      'Dagger',
+    ],
+    language: 'Elvish'
+})
+
+const runtime=new Game(Hero, Villian)
+
+console.log(runtime.runGame());
